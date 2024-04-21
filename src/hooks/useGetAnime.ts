@@ -4,7 +4,7 @@
 import {useQuery} from '@tanstack/react-query';
 
 const fetchAnimeDetails = async () => {
-  await new Promise(resolve => setTimeout(resolve, 3000));
+//   await new Promise(resolve => setTimeout(resolve, 1000));
 
   const response = await fetch('https://api.jikan.moe/v4/anime');
   if (!response.ok) {

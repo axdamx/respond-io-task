@@ -27,35 +27,24 @@ type Props = {
   navigation: HomeScreenNavigationProp;
 };
 const HomeScreen: React.FC<Props> = ({navigation}) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  // const [liked, setLiked] = useState(false);
-
-  const animeData = useAnimeStore(state => state.animeData);
-  const setAnimeData = useAnimeStore(state => state.setAnimeData);
-
   const favorites = useFavoriteStore(state => state.favorites);
   const toggleFavorite = useFavoriteStore(state => state.toggleFavorite);
 
   // const { data, isLoading, isError } = useQuery('animeData', fetchAnimeData); // Assuming fetchAnimeData is your fetch function
 
-  const {data: apiData, isLoading, isError, isFetching} = useAnimeDetails();
+  //   const {data: apiData, isLoading, isError, isFetching} = useAnimeDetails();
   // console.log('apiData', apiData?.data);
   console.log('favorites', favorites);
 
-  useEffect(() => {
-    if (apiData) {
-      setAnimeData(apiData.data);
-    }
-  }, [apiData, setAnimeData]);
+  //   useEffect(() => {
+  //     if (apiData) {
+  //       setAnimeData(apiData.data);
+  //     }
+  //   }, [apiData, setAnimeData]);
 
-  // const airingAnimeData = useAnimeStore(state =>
-  //   state.animeData.filter(anime => anime.status === 'Currently Airing'),
-  // );
-  // console.log('🚀 ~ airingAnimeData:', airingAnimeData);
-
-  const filteredData = animeData.filter(anime =>
-    anime.title.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  //   const filteredData = animeData.filter(anime =>
+  //     anime.title.toLowerCase().includes(searchQuery.toLowerCase()),
+  //   );
 
   const handleFavoritePress = id => {
     toggleFavorite(id);
@@ -105,13 +94,13 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
 
   const renderItem = ({item}) => {
     console.log('item', item);
-    const isFavourite = favorites.some(
-      favItem => favItem.mal_id === item.mal_id,
-    );
+
+    const isFavourite = favorites.some(favItem => favItem.id === item.id);
+
     return (
       <TouchableOpacity
         // key={index}
-        onPress={() => navigation.navigate('DetailsScreen', {id: item.mal_id})}>
+        onPress={() => navigation.navigate('DetailsScreen', {id: item.id})}>
         <View
           style={{
             // flexDirection: 'row',
@@ -136,8 +125,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
             style={{
               margin: 10,
               flexDirection: 'row',
-              justifyContent: 'space-evenly',
-              // justi
+              justifyContent: 'space-around',
             }}>
             <View style={{width: '80%'}}>
               <Text>Name: {item.title}</Text>
@@ -145,13 +133,7 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
               <Text>Rating: {item?.rating}</Text>
               <Text>Year: {item.year}</Text>
             </View>
-            <View
-              style={{
-                alignSelf: 'center',
-                // justifyContent: 'flex-end',
-                // backgroundColor: 'green',
-                // width: 45,
-              }}>
+            <View style={{alignSelf: 'center'}}>
               <IonIcon
                 name={isFavourite ? 'heart' : 'heart-outline'}
                 size={24}
@@ -170,31 +152,18 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
   // const renderList = () =>
   //   filteredData?.map((x, index) => renderItem(x, index));
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
-  }
+  //   if (isLoading) {
+  //     return <Text>Loading...</Text>;
+  //   }
 
-  if (isError) {
-    return <Text>Error fetching data</Text>;
-  }
+  //   if (isError) {
+  //     return <Text>Error fetching data</Text>;
+  //   }
 
   return (
     <View style={{flex: 1}}>
-      <TextInput
-        style={{
-          height: 40,
-          borderColor: 'gray',
-          borderWidth: 1,
-          margin: 10,
-          paddingHorizontal: 10,
-        }}
-        placeholder="Search Anime"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        onSubmitEditing={handleSearch}
-      />
       <FlatList
-        data={filteredData}
+        data={favorites}
         renderItem={renderItem}
         keyExtractor={item => item.mal_id}
         // onEndReached={handleLoadMore}

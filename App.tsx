@@ -10,6 +10,7 @@ import Completed from './src/views/Completed';
 import Upcoming from './src/views/Upcoming';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+import FavouritesScreen from './src/views/FavouritesScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -24,6 +25,38 @@ const StackScreens = () => {
         component={HomeScreen}
         options={({navigation}) => ({
           title: 'Home',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          // eslint-disable-next-line react/no-unstable-nested-components
+          headerLeft: () => (
+            <IonIcon
+              name={'list-sharp'}
+              size={24}
+              // eslint-disable-next-line react-native/no-inline-styles
+              style={{marginLeft: 10}}
+              onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+            />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="DetailsScreen"
+        component={DetailsScreen}
+        options={{title: 'Details Screen'}}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const FavouriteStackScreens = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Favourites"
+        component={FavouritesScreen}
+        options={({navigation}) => ({
+          title: 'Favourites',
           headerTitleStyle: {
             fontWeight: 'bold',
           },
@@ -78,6 +111,11 @@ const App = () => {
           <Drawer.Screen
             name="Anime Listing View"
             component={TabNavigator}
+            options={{headerShown: false}}
+          />
+          <Drawer.Screen
+            name="Favourites"
+            component={FavouriteStackScreens}
             options={{headerShown: false}}
           />
         </Drawer.Navigator>
