@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import {ParamListBase} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,13 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import useAnimeDetails from '../hooks/useGetAnime';
 import useAnimeStore from '../store/animeStore';
 import useFavoriteStore from '../store/favouriteStore';
+import useAnimePagination from '../hooks/useGetAnime';
 
 type RootStackParamList = {
   Home: undefined;
@@ -30,30 +32,42 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   // const [liked, setLiked] = useState(false);
 
-  const animeData = useAnimeStore(state => state.animeData);
-  const setAnimeData = useAnimeStore(state => state.setAnimeData);
+  // const animeData = useAnimeStore(state => state.animeData);
+  // console.log('🚀 ~ animeData:', animeData);
+  // const setAnimeData = useAnimeStore(state => state.setAnimeData);
 
   const favorites = useFavoriteStore(state => state.favorites);
   const toggleFavorite = useFavoriteStore(state => state.toggleFavorite);
 
   // const { data, isLoading, isError } = useQuery('animeData', fetchAnimeData); // Assuming fetchAnimeData is your fetch function
 
-  const {data: apiData, isLoading, isError, isFetching} = useAnimeDetails();
-  // console.log('apiData', apiData?.data);
-  console.log('favorites', favorites);
+  const {
+    data: apiData,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAnimePagination();
+  // console.log('apiData', apiData?.pages);
+  const dataArray = apiData?.pages.flatMap(page => page.data);
+  // console.log('🚀 ~ dataArray:', dataArray);
+  // console.log('🚀 ~ animeData:', animeData);
 
-  useEffect(() => {
-    if (apiData) {
-      setAnimeData(apiData.data);
-    }
-  }, [apiData, setAnimeData]);
+  // console.log('data', data);
+
+  // useEffect(() => {
+  //   if (apiData) {
+  //     setAnimeData(dataArray);
+  //   }
+  // }, [apiData, setAnimeData]);
 
   // const airingAnimeData = useAnimeStore(state =>
   //   state.animeData.filter(anime => anime.status === 'Currently Airing'),
   // );
   // console.log('🚀 ~ airingAnimeData:', airingAnimeData);
 
-  const filteredData = animeData.filter(anime =>
+  const filteredData = dataArray?.filter(anime =>
     anime.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
@@ -103,8 +117,19 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
   //   );
   // };
 
+  // const onEndReached = () => {
+  //   if (hasNextPage && !isLoading) {
+  //     fetchNextPage();
+  //   }
+  // };
+  const onEndReached = useCallback(() => {
+    if (hasNextPage && !isLoading) {
+      console.log('End of list reached. Fetching next page...');
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isLoading]);
+
   const renderItem = ({item}) => {
-    console.log('item', item);
     const isFavourite = favorites.some(
       favItem => favItem.mal_id === item.mal_id,
     );
@@ -148,9 +173,6 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
             <View
               style={{
                 alignSelf: 'center',
-                // justifyContent: 'flex-end',
-                // backgroundColor: 'green',
-                // width: 45,
               }}>
               <IonIcon
                 name={isFavourite ? 'heart' : 'heart-outline'}
@@ -167,9 +189,6 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
     );
   };
 
-  // const renderList = () =>
-  //   filteredData?.map((x, index) => renderItem(x, index));
-
   if (isLoading) {
     return <Text>Loading...</Text>;
   }
@@ -177,6 +196,19 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
   if (isError) {
     return <Text>Error fetching data</Text>;
   }
+
+  const renderFooter = () => {
+    if (!hasNextPage || !isFetchingNextPage) {
+      return null;
+    }
+    return (
+      <ActivityIndicator
+        style={{marginVertical: 20}}
+        size="large"
+        color="blue"
+      />
+    );
+  };
 
   return (
     <View style={{flex: 1}}>
@@ -194,14 +226,15 @@ const HomeScreen: React.FC<Props> = ({navigation}) => {
         onSubmitEditing={handleSearch}
       />
       <FlatList
+        style={{backgroundColor: 'yellow', flexGrow: 1, flex: 1}}
         data={filteredData}
         renderItem={renderItem}
         keyExtractor={item => item.mal_id}
-        // onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
         // numColumns={2}
         showsVerticalScrollIndicator={false}
-        // ListFooterComponent={isFetching && <Text>Loading more...</Text>}
+        ListFooterComponent={renderFooter}
       />
     </View>
   );
