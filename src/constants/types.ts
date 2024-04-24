@@ -1,3 +1,5 @@
+import {ParamListBase} from '@react-navigation/native';
+
 export interface Anime {
   pagination: Pagination;
   data: Data[];
@@ -159,3 +161,12 @@ export interface Items {
   total: number;
   per_page: number;
 }
+
+export type RootStackParamList = {
+  Completed: undefined;
+  AnimeListing: {id: number};
+  Favourite: undefined;
+  Airing: undefined;
+  Upcoming: undefined;
+  // Add other screens and their parameters here
+} & ParamListBase;

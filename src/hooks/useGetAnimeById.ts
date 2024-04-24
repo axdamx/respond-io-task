@@ -1,11 +1,9 @@
-// useAnimeDetails.js
-// import { useQuery } from 'react-query';
-
+// @ts-nocheck to disable type checking per file
 import {useQuery} from '@tanstack/react-query';
+import {baseUrl, endPoints} from '../constants/api';
 
 const fetchAnimeDetailsById = async (id: number) => {
-  //   await new Promise(resolve => setTimeout(resolve, 1000));
-  const response = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
+  const response = await fetch(`${baseUrl}${endPoints.animeById}${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch anime details');
   }
@@ -15,7 +13,7 @@ const fetchAnimeDetailsById = async (id: number) => {
 const useAnimeDetailsById = (id: number) => {
   return useQuery({
     queryFn: () => fetchAnimeDetailsById(id),
-    queryKey: ['animeById'],
+    queryKey: ['animeId'],
   });
 };
 

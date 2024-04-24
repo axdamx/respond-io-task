@@ -1,75 +1,32 @@
-// // // useAnimeDetails.js
-// // // import { useQuery } from 'react-query';
-
-// // import {useQuery} from '@tanstack/react-query';
-
-// // const fetchAnimeDetails = async () => {
-// // //   await new Promise(resolve => setTimeout(resolve, 3000));
-
-// //   const response = await fetch('https://api.jikan.moe/v4/anime');
-// //   if (!response.ok) {
-// //     throw new Error('Network response was not ok');
-// //   }
-// //   return response.json();
-// // };
-
-// // const useAnimeDetails = () => {
-// //   return useQuery({
-// //     queryFn: () => fetchAnimeDetails(),
-// //     queryKey: ['anime'],
-// //   });
-// // };
-
-// // export default useAnimeDetails;
-
-// import {useInfiniteQuery} from '@tanstack/react-query';
-
-// const fetchAnimePage = async ({pageParam = 1}) => {
-//   const response = await fetch(
-//     `https://api.jikan.moe/v4/top/anime?page=${pageParam}`,
-//   );
-//   if (!response.ok) {
-//     throw new Error('Failed to fetch anime data');
-//   }
-//   return response.json();
-// };
-
-// const useAnimePagination = () => {
-//   return useInfiniteQuery({
-//     queryKey: ['pagination'],
-//     queryFn: ({pageParam}) => fetchAnimePage({pageParam}),
-//     initialPageParam: 1,
-//     getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) =>
-//       lastPage.nextCursor,
-//   });
-//   return {
-//     data,
-//     isLoading,
-//     isError,
-//     fetchNextPage,
-//     hasNextPage,
-//     isFetchingNextPage,
-//   };
-// };
-
-// export default useAnimePagination;
-
+// @ts-nocheck to disable type checking per file
 import {useInfiniteQuery} from '@tanstack/react-query';
-import useAnimeStore from '../store/animeStore';
+import {baseUrl, endPoints} from '../constants/api';
 
-const fetchAnimePage = async ({pageParam = 1}) => {
-  const response = await fetch(
-    `https://api.jikan.moe/v4/top/anime?page=${pageParam}`,
-  );
+interface FetchAnimePageParams {
+  pageParam?: number;
+  filter?: string;
+}
+
+const fetchAnimePage = async ({
+  pageParam = 1,
+  filter,
+}: FetchAnimePageParams) => {
+  let url = `${baseUrl}${endPoints.topAnime}?page=${pageParam}`;
+
+  // Append filter to URL if provided
+  if (filter) {
+    url += `&filter=${filter}`;
+  }
+
+  const response = await fetch(url);
+
   if (!response.ok) {
     throw new Error('Failed to fetch anime data');
   }
   return response.json();
 };
 
-const useAnimePagination = () => {
-  const {setAnimeData} = useAnimeStore();
-
+const useAnimePagination = (filter?: string) => {
   const {
     data,
     isLoading,
@@ -77,16 +34,16 @@ const useAnimePagination = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   } = useInfiniteQuery({
-    queryKey: ['pagination'],
-    queryFn: ({pageParam}) => fetchAnimePage({pageParam}),
+    queryKey: [filter],
+    queryFn: ({pageParam}) => fetchAnimePage({pageParam, filter}),
     getNextPageParam: (lastPage, allPages) => {
-       if (lastPage.length === 0) return undefined;
-       return allPages.length + 1;
+      if (lastPage.length === 0) {
+        return undefined;
+      }
+      return allPages.length + 1;
     },
-    // onSuccess: (fetchedData) => {
-    //     setAnimeData(fetchedData.pages); // Set fetched data in Zustand store
-    //   },
   });
 
   return {
@@ -96,6 +53,7 @@ const useAnimePagination = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
   };
 };
 

@@ -1,33 +1,83 @@
 /* eslint-disable react-native/no-inline-styles */
 // @ts-nocheck to disable type checking per file
-import {StackNavigationProp} from '@react-navigation/stack';
-import React from 'react';
-import {View, Text, FlatList, TouchableOpacity, Image} from 'react-native';
+import React, {useCallback} from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import useFavoriteStore from '../store/favouriteStore';
 import {RootStackParamList} from '../constants/types';
+import {StackNavigationProp} from '@react-navigation/stack';
+import useAnimePagination from '../hooks/useGetAnime';
+import LoadingPlaceholder from './component/LoadingPlaceholder';
+import MainLists from './component/MainLists';
+import {primaryColor} from '../constants/colors';
 
-type FavouriteScreenNavigationProp = StackNavigationProp<
+type AiringScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'Favourite'
+  'Airing'
 >;
 
 type Props = {
-  navigation: FavouriteScreenNavigationProp;
+  navigation: AiringScreenNavigationProp;
 };
-const FavouritesScreen: React.FC<Props> = ({navigation}) => {
-  const favorites = useFavoriteStore(state => state.favorites);
-  const toggleFavorite = useFavoriteStore(state => state.toggleFavorite);
+const AiringScreen: React.FC<Props> = ({navigation}) => {
+  const {favorites, toggleFavorite} = useFavoriteStore();
+
+  const {
+    data,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAnimePagination('airing');
+
+  const dataArray = data?.pages.flatMap(page => page.data);
 
   const handleFavoritePress = id => {
     toggleFavorite(id);
   };
 
+  const onEndReached = useCallback(() => {
+    if (hasNextPage && !isLoading) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isLoading]);
+
+  if (isLoading) {
+    return <LoadingPlaceholder />;
+  }
+
+  if (isError) {
+    return <Text>Error fetching data</Text>;
+  }
+
+  const renderFooter = () => {
+    if (!hasNextPage || !isFetchingNextPage) {
+      return null;
+    }
+    return (
+      <ActivityIndicator
+        style={{marginVertical: 20}}
+        size="large"
+        color={primaryColor}
+      />
+    );
+  };
+
   const renderItem = ({item}) => {
-    const isFavourite = favorites.some(favItem => favItem.id === item.id);
+    const isFavourite = favorites.some(
+      favItem => favItem.mal_id === item.mal_id,
+    );
 
     return (
       <TouchableOpacity
+        // key={index}
         onPress={() => navigation.navigate('DetailsScreen', {anime: item})}>
         <View
           style={{
@@ -70,26 +120,16 @@ const FavouritesScreen: React.FC<Props> = ({navigation}) => {
     );
   };
 
-  if (favorites.length === 0) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text style={{textDecorationStyle: 'double'}}>
-          You have no favourite anime yet??!
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={{flex: 1}}>
-      <FlatList
-        data={favorites}
+      <MainLists
+        data={dataArray}
         renderItem={renderItem}
-        keyExtractor={item => item.mal_id}
-        showsVerticalScrollIndicator={false}
+        onEndReached={onEndReached}
+        renderFooter={renderFooter}
       />
     </View>
   );
 };
 
-export default FavouritesScreen;
+export default AiringScreen;

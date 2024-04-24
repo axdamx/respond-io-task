@@ -1,3 +1,4 @@
+// @ts-nocheck to disable type checking per file
 import {create} from 'zustand';
 
 const useAnimeStore = create(set => ({
