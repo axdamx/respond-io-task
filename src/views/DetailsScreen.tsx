@@ -27,8 +27,8 @@ const DetailsScreen = () => {
     return <DetailsLoadingPlaceholder />;
   }
 
-  const handleFavoritePress = id => {
-    toggleFavorite(id);
+  const handleFavoritePress = animeId => {
+    toggleFavorite(animeId);
   };
 
   const renderContent = () => {
